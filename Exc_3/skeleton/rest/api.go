@@ -1,7 +1,9 @@
 package rest
 
 import (
+	"encoding/json"
 	"net/http"
+	"ordersystem/model"
 	"ordersystem/repository"
 
 	"github.com/go-chi/render"
@@ -19,12 +21,40 @@ func GetMenu(db *repository.DatabaseHandler) http.HandlerFunc {
 		// get slice from db
 		// render.Status(r, http.StatusOK)
 		// render.JSON(w, r, <your-slice>)
+		render.Status(r, http.StatusOK)
+		render.JSON(w, r, db.GetDrinks())
 	}
 }
 
 // todo create GetOrders /api/order/all
 
+// GetOrders 		godoc
+// @tags 			Order
+// @Description 	Returns all orders
+// @Produce  		json
+// @Success 		200 {array} model.Order
+// @Router 			/api/order/all [get]
+func GetOrders(db *repository.DatabaseHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		render.Status(r, http.StatusOK)
+		render.JSON(w, r, db.GetOrders())
+	}
+}
+
 // todo create GetOrdersTotal /api/order/total
+
+// GetOrdersTotal 	godoc
+// @tags 			Order
+// @Description 	Returns the total amount ordered per drink id
+// @Produce  		json
+// @Success 		200 {object} map[uint64]uint64
+// @Router 			/api/order/totalled [get]
+func GetOrdersTotal(db *repository.DatabaseHandler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		render.Status(r, http.StatusOK)
+		render.JSON(w, r, db.GetTotalledOrders())
+	}
+}
 
 // PostOrder 		godoc
 // @tags 			Order
@@ -42,6 +72,14 @@ func PostOrder(db *repository.DatabaseHandler) http.HandlerFunc {
 		// err := json.NewDecoder(r.Body).Decode(&<your-order-struct>)
 		// handle error and render Status 400
 		// add to db
+		var order model.Order
+		err := json.NewDecoder(r.Body).Decode(&order)
+		if err != nil {
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, err.Error())
+			return
+		}
+		db.AddOrder(&order)
 		render.Status(r, http.StatusOK)
 		render.JSON(w, r, "ok")
 	}
